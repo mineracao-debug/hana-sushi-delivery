@@ -4,6 +4,8 @@ Cardápio React com seleção de estado antes da cidade, localização aproximad
 
 A localização começa a carregar antes do aplicativo, reutiliza a cidade salva e limita a espera de rede a 3 segundos. O seletor mostra estado e cidade, sem botão de detecção nem aviso adicional.
 
+O checkout usa uma única tela, resumo expansível e barra de pagamento no celular. O CEP é consultado automaticamente ao completar 8 dígitos, com máscara, cancelamento de respostas antigas e preenchimento manual em caso de falha. CEPs gerais da cidade permitem completar rua e bairro. A consulta usa o ViaCEP (https://viacep.com.br/).
+
 ## Desenvolvimento e publicação
 
 Execute `npm ci` e `npm run build` com Node 24. Publique a pasta `dist` no Netlify. O arquivo `netlify.toml` também permite conectar este repositório ao Netlify para builds automáticos. A publicação inicial foi feita por upload manual; novos commits não publicam automaticamente até conectar o repositório.
