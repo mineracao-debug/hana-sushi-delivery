@@ -12,7 +12,7 @@ export function useCityLocation(enabled:boolean){
   const controller=new AbortController();pending.current=controller;
   setLocating(true);setLocationError('');
   try{
-   const result=await detectCity({signal:controller.signal});
+   const result=await detectCity({signal:controller.signal,earlyRequest:(window as any).__hanaLocationRequest});
    if(controller.signal.aborted)return false;
    let saved={...result,source:'auto'};
    try{saved=saveLocation(localStorage,result,'auto');}catch{}
@@ -36,5 +36,5 @@ export function useCityLocation(enabled:boolean){
   if(saved)setSelection(saved);else void detect();
   return()=>pending.current?.abort();
  },[enabled,detect]);
- return {selection,locating,locationError,detect,choose};
+ return {selection,locating,locationError,choose};
 }

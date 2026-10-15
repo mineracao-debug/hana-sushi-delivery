@@ -2,6 +2,8 @@
 
 Cardápio React com seleção de estado antes da cidade, localização aproximada por IP, carrinho e checkout. A loja é pública, sem login do ChatGPT. O Adminx exige apenas o usuário e a senha próprios da loja.
 
+A localização começa a carregar antes do aplicativo, reutiliza a cidade salva e limita a espera de rede a 3 segundos. O seletor mostra estado e cidade, sem botão de detecção nem aviso adicional.
+
 ## Desenvolvimento e publicação
 
 Execute `npm ci` e `npm run build` com Node 24. Publique a pasta `dist` no Netlify. O arquivo `netlify.toml` também permite conectar este repositório ao Netlify para builds automáticos. A publicação inicial foi feita por upload manual; novos commits não publicam automaticamente até conectar o repositório.

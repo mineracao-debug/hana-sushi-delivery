@@ -1,5 +1,15 @@
 export const LOCATION_KEY = 'hana-location-v2';
 export const LOCATION_MAX_AGE = 6 * 60 * 60 * 1000;
+export const LOCATION_TIMEOUT = 3000;
+export const LOCATION_URL = 'https://ipwho.is/?fields=success,country_code,city,region_code&lang=pt-BR';
+// Starts before the application bundle. The hook consumes this same request.
+export const EARLY_LOCATION_SCRIPT = `(()=>{
+ if(window.location.pathname!=='/'||window.__hanaLocationRequest)return;
+ let saved=null;try{saved=JSON.parse(localStorage.getItem(${JSON.stringify(LOCATION_KEY)})||'null');}catch{}
+ if(saved&&typeof saved.city==='string'&&saved.city.length>=2&&typeof saved.state==='string'&&saved.state.length===2&&(saved.source==='manual'||(saved.source==='auto'&&Number.isFinite(saved.savedAt)&&saved.savedAt<=Date.now()&&Date.now()-saved.savedAt<${LOCATION_MAX_AGE})))return;
+ const request=fetch(${JSON.stringify(LOCATION_URL)},{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:AbortSignal.timeout(${LOCATION_TIMEOUT})}).then(response=>{if(!response.ok)throw new Error('Location unavailable');return response.json();});
+ request.catch(()=>{});window.__hanaLocationRequest=request;
+})();`;
 const states = new Set('AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' '));
 
 export function normalizeLocation(data) {
@@ -25,14 +35,18 @@ export function saveLocation(storage, location, source) {
   return saved;
 }
 
-/** @param {{signal?: AbortSignal, fetchImpl?: typeof fetch}} [options] */
-export async function detectCity({ signal, fetchImpl = fetch } = {}) {
-  const response = await fetchImpl('https://ipwho.is/?fields=success,country_code,city,region_code&lang=pt-BR', {
-    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(6000)]) : AbortSignal.timeout(6000),
-    credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store',
-  });
-  if (!response.ok) throw new Error('Location unavailable');
-  const data = await response.json();
+/** @param {{signal?: AbortSignal, fetchImpl?: typeof fetch, earlyRequest?: Promise<any>}} [options] */
+export async function detectCity({ signal, fetchImpl = fetch, earlyRequest } = {}) {
+  signal?.throwIfAborted();
+  const data = await (earlyRequest || (async()=>{
+    const response = await fetchImpl(LOCATION_URL, {
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(LOCATION_TIMEOUT)]) : AbortSignal.timeout(LOCATION_TIMEOUT),
+      credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store',
+    });
+    if (!response.ok) throw new Error('Location unavailable');
+    return response.json();
+  })());
+  signal?.throwIfAborted();
   const location = data.success === true ? normalizeLocation(data) : null;
   if (!location) throw new Error('Location unavailable');
   return location;
