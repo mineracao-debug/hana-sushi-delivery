@@ -71,7 +71,6 @@ export default function Sushi({route=[]}:{route?:string[]}){
    </select>:<input autoFocus aria-label="Cidade" value={city} onChange={e=>{locationEdited.current=true;setCity(e.target.value);}} placeholder="Digite sua cidade" required minLength={2} maxLength={80}/>}
    <button className="primary">{modalStep===0?'Continuar':'Ver cardápio'}</button>
   </form>
-  {modalStep===1&&<button className="detect-location" onClick={()=>setModalStep(0)}>‹ Alterar estado</button>}
   {locationError&&<p className="location-note" role="status">{locationError}</p>}
  </section>
 </div>}</>;
