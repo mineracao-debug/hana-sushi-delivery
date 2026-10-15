@@ -1,0 +1,14 @@
+import {build} from 'esbuild';
+import {mkdir,cp,writeFile,readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+await mkdir('dist',{recursive:true});
+execFileSync('tar',['-xzf','public-assets.tar.gz']);
+await cp('public','dist',{recursive:true});
+const result=await build({entryPoints:['main.tsx'],bundle:true,minify:true,jsx:'automatic',format:'esm',target:'es2022',outdir:'dist/assets',entryNames:'app-[hash]',assetNames:'[name]-[hash]',external:['/fonts/*','/images/*'],metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
+const entry=Object.entries(result.metafile.outputs).find(([,v])=>v.entryPoint==='main.tsx');
+if(!entry)throw new Error('Missing frontend bundle');
+const js='/'+entry[0].replace(/^dist\//,''),css='/'+entry[1].cssBundle.replace(/^dist\//,'');
+await writeFile('dist/index.html',`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Escolha seu combo de sushi, personalize os complementos e faça seu pedido online."><title>Hana Sushi — Faça seu pedido</title><link rel="icon" href="/images/logo.webp"><link rel="stylesheet" href="${css}"></head><body><div id="root"></div><script type="module" src="${js}"></script></body></html>`);
+await writeFile('dist/_redirects',`/api/* https://hana-sushi-delivery.beneditocsj88.chatgpt.site/api/:splat 200!\n/adminx /adminx/ 301\n/* /index.html 200\n`);
+await writeFile('dist/_headers',`/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/adminx/*\n  Cache-Control: no-store\n/api/*\n  Cache-Control: no-store\n`);
+console.log('Netlify frontend built. APIs remain on the shared Sites backend.');
