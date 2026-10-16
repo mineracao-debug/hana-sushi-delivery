@@ -4,11 +4,11 @@ import DeliveryFields,{type CheckoutData} from './DeliveryFields';
 type Props={
  form:CheckoutData;setForm:Dispatch<SetStateAction<CheckoutData>>;
  phoneError:string;setPhoneError:(message:string)=>void;phoneInput:RefObject<HTMLInputElement|null>;
- checked:boolean;setChecked:(value:boolean)=>void;busy:boolean;cepLoading:boolean;pixEnabled:boolean;
+ checked:boolean;setChecked:(value:boolean)=>void;busy:boolean;paymentBlocked:boolean;cepLoading:boolean;pixEnabled:boolean;
  total:string;onLoading:(loading:boolean)=>void;onStage:(stage:number)=>void;onSubmit:(event:FormEvent<HTMLFormElement>)=>void;
 };
 export default function CheckoutForm(props:Props){
- const {form,setForm,phoneError,setPhoneError,phoneInput,checked,setChecked,busy,cepLoading,pixEnabled,total,onLoading,onStage,onSubmit}=props;
+ const {form,setForm,phoneError,setPhoneError,phoneInput,checked,setChecked,busy,paymentBlocked,cepLoading,pixEnabled,total,onLoading,onStage,onSubmit}=props;
  function field(name:keyof CheckoutData,label:string,options:InputHTMLAttributes<HTMLInputElement>={}){
   return <label>{label}<input name={name} value={form[name]} onChange={event=>{const value=event.target.value;setForm(current=>({...current,[name]:value}));if(name==='phone')setPhoneError('');}} required {...options} {...(name==='phone'?{ref:phoneInput}: {})}/>{name==='phone'&&phoneError&&<small id="phone-help" className="field-error" role="alert">{phoneError}</small>}</label>;
  }
@@ -30,6 +30,6 @@ export default function CheckoutForm(props:Props){
    {!pixEnabled&&<p className="warning">O pagamento está aguardando configuração da loja. Seu carrinho será mantido.</p>}
    <label className="terms-check"><input type="checkbox" checked={checked} onChange={event=>setChecked(event.target.checked)} required/><span>Li e aceito os <a href="/terms/" target="_blank">termos de uso</a> e a <a href="/privacy/" target="_blank">política de privacidade</a>.</span></label>
   </section>
-  <div className="checkout-paybar"><div><span>Total com entrega grátis</span><strong>{total}</strong></div><button className="primary" type="submit" disabled={busy||cepLoading||!checked||!pixEnabled}>{busy?'Gerando Pix…':cepLoading?'Buscando CEP…':'Gerar Pix'}<span aria-hidden="true">→</span></button></div>
+  <div className="checkout-paybar"><div><span>Total com entrega grátis</span><strong>{total}</strong></div><button className="primary" type="submit" disabled={paymentBlocked||busy||cepLoading||!checked||!pixEnabled}>{paymentBlocked?'Confira o Pix anterior':busy?'Gerando Pix…':cepLoading?'Buscando CEP…':'Gerar Pix'}<span aria-hidden="true">→</span></button></div>
  </form>;
 }

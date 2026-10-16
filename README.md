@@ -19,3 +19,6 @@ As chamadas `/api/*` são encaminhadas pelo Netlify para `https://hana-sushi-del
 No servidor, `PUBLIC_STORE_ORIGINS` deve conter a origem HTTPS exata do novo site. Domínios personalizados adicionais devem ser autorizados ali antes do uso. Não usar curingas. Nenhuma chave privada ou senha é incluída neste repositório ou nos arquivos estáticos.
 
 As integrações Umbrellapag, Sharkpay e UTMify são do projeto Shopping. O Pix só fica disponível após cadastrar uma chave válida no Adminx. O token privado de vendas da UTMify também deve ser cadastrado no painel.
+
+O checkout consulta o identificador do Pix anterior e oferece retomá-lo, sem abrir automaticamente um código antigo. Pagamentos encerrados e vencidos não são recuperados como pagáveis. O cliente pode voltar ao checkout ou iniciar outro pedido conscientemente; isso não cancela cobranças anteriores.
+
