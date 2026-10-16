@@ -1,31 +1,10 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
-import {forgetPix,pixState,recoverPix,sameOrderItems} from './pix-session.mjs';
+import {useEffect,useState} from 'react';
+import {forgetPix,pixState,sameOrderItems} from './pix-session.mjs';
 
 export function usePixCheckout(enabled:boolean,setCart:(update:(current:any[])=>any[])=>void){
- const [pix,setPix]=useState<any>(null),[previous,setPrevious]=useState<any>(null);
- const [checking,setChecking]=useState(enabled),[recoveryError,setRecoveryError]=useState(''),[message,setMessage]=useState(''),[retry,setRetry]=useState(0);
- const savedId=useRef('');
- useEffect(()=>{
-  if(!enabled)return;
-  let id='';try{id=localStorage.getItem('hana-pix')||'';}catch{}
-  savedId.current=id;
-  try{if(id)localStorage.setItem('hana-last-order',id);}catch{}
-  if(!id){setChecking(false);return;}
-  let current=true;const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),8000);
-  setChecking(true);setRecoveryError('');
-  recoverPix(id,{signal:controller.signal}).then(result=>{
-   if(!current)return;
-   if(result.kind==='offer')setPrevious(result.payment);
-   else{
-    forgetPix(localStorage,id);savedId.current='';
-    setMessage(result.state==='paid'?'O pagamento anterior já foi confirmado. Este checkout é para um novo pedido.':result.state?'O Pix anterior foi encerrado ou venceu. Você pode continuar com seu pedido.':'');
-   }
-  }).catch(()=>{if(current)setRecoveryError('Não foi possível consultar o Pix anterior. Tente novamente antes de gerar outro pagamento.');})
-  .finally(()=>{clearTimeout(timeout);if(current)setChecking(false);});
-  return()=>{current=false;clearTimeout(timeout);controller.abort();};
- },[enabled,retry]);
+ const [pix,setPix]=useState<any>(null);
+ // Checkout always starts empty. Only payments generated in this mounted checkout are shown.
 
  useEffect(()=>{
   if(!pix?.id)return;
@@ -52,22 +31,14 @@ export function usePixCheckout(enabled:boolean,setCart:(update:(current:any[])=>
  },[pix?.id,pix?.status,pix?.paid,pix?.expirationDate,pix?.fulfillment?.status,setCart]);
 
  function acceptPayment(payment:any){
-  setPix(payment);setPrevious(null);setMessage('');
-  savedId.current=payment.id||'';
-  try{if(payment.id)localStorage.setItem('hana-last-order',payment.id);}catch{}
-  try{if(payment.id&&pixState(payment)==='pending')localStorage.setItem('hana-pix',payment.id);}catch{}
+  setPix(payment);
  }
  function backToCheckout(){
-  if(pixState(pix)==='pending')setPrevious(pix);
-  else{forgetPix(localStorage,pix?.id);savedId.current='';}
-  setPix(null);setMessage('');
+  setPix(null);
  }
  function newOrder(){
-  forgetPix(localStorage,savedId.current);savedId.current='';
   try{sessionStorage.removeItem('hana-attempt');}catch{}
-  setPix(null);setPrevious(null);setRecoveryError('');setMessage('');
+  setPix(null);
  }
- return {pix,previous,checking,recoveryError,message,blocked:checking||!!previous||!!recoveryError,
-  retry:()=>setRetry(value=>value+1),resume:()=>{setPix(previous);setPrevious(null);setMessage('');},
-  acceptPayment,backToCheckout,newOrder};
+ return {pix,blocked:false,acceptPayment,backToCheckout,newOrder};
 }

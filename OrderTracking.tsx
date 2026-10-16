@@ -12,24 +12,18 @@ export default function OrderTracking({setCart}:{setCart:(update:(current:any[])
  },[payment?.id,payment?.paid,setCart]);
  useEffect(()=>{
   let id=new URLSearchParams(window.location.search).get('id');
-  if(!id)try{id=localStorage.getItem('hana-last-order')||localStorage.getItem('hana-pix');}catch{}
+  if(!id){setError('Abra o link de acompanhamento exibido ao gerar seu Pix.');setLoading(false);return;}
   if(id&&!/^SB-[a-f0-9-]{36}$/i.test(id)){setError('Pedido não encontrado. Confira o link de acompanhamento.');setLoading(false);return;}
   let current=true,running=false,finished=false;const controller=new AbortController();
   async function refresh(){
    if(running||finished)return;running=true;
    const timeout=setTimeout(()=>controller.abort(),10000);
    try{
-    if(!id){
-     const latest=await fetch('/api/latest-order',{signal:controller.signal,cache:'no-store'});
-     if(!latest.ok)throw new Error('Não foi possível consultar seus pedidos agora.');
-     const result:any=await latest.json();id=result.order?.id;
-     if(!id){finished=true;throw new Error('Nenhum pedido encontrado neste navegador.');}
-    }
     const response=await fetch('/api/pix-status?id='+encodeURIComponent(id!),{signal:controller.signal,cache:'no-store'});
     if(response.status===404){finished=true;throw new Error('Pedido não encontrado. Abra o acompanhamento no mesmo navegador usado para fazer o pedido.');}
     if(!response.ok)throw new Error('Não foi possível atualizar agora. Tente novamente.');
     const data:any=await response.json();if(data.id!==id)throw new Error('Não foi possível conferir este pedido.');
-    if(current){setPayment(data);setError(data.checking?'A operadora está indisponível. Exibindo a última situação confirmada.':'');try{localStorage.setItem('hana-last-order',id!);}catch{}}
+    if(current){setPayment(data);setError(data.checking?'A operadora está indisponível. Exibindo a última situação confirmada.':'');}
     finished=data.fulfillment?.status==='delivered'||['failed','canceled','refused','refunded','chargedback'].includes(data.status);
    }catch(failure:any){if(controller.signal.aborted)finished=true;if(current)setError(controller.signal.aborted?'A consulta demorou. Toque em atualizar para tentar novamente.':failure.message);}
    finally{clearTimeout(timeout);running=false;if(current)setLoading(false);}

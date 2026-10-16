@@ -4,7 +4,7 @@ Cardápio React com seleção de estado antes da cidade, localização aproximad
 
 A localização começa a carregar antes do aplicativo, reutiliza a cidade salva e limita a espera de rede a 3 segundos. O seletor mostra estado e cidade, sem botão de detecção nem aviso adicional.
 
-O checkout usa uma única tela, resumo expansível e barra de pagamento no celular. O CEP é consultado automaticamente ao completar 8 dígitos, com máscara, cancelamento de respostas antigas e preenchimento manual em caso de falha. CEPs gerais da cidade permitem completar rua e bairro. A consulta usa o ViaCEP (https://viacep.com.br/).
+O checkout usa uma única tela, resumo expansível e barra de pagamento no celular. O endereço é preenchido diretamente, sem campo de CEP. Cidade e estado aproveitam a seleção salva. O servidor consulta o CEP pelo endereço no ViaCEP (https://viacep.com.br/) antes da emissão do Pix, conferindo rua, bairro, cidade, estado e regras explícitas de numeração. Se não houver correspondência única, pede a revisão do endereço antes de criar a cobrança.
 
 ## Desenvolvimento e publicação
 
@@ -20,7 +20,7 @@ No servidor, `PUBLIC_STORE_ORIGINS` deve conter a origem HTTPS exata do novo sit
 
 As integrações Umbrellapag, Sharkpay e UTMify são do projeto Shopping. O Pix só fica disponível após cadastrar uma chave válida no Adminx. O token privado de vendas da UTMify também deve ser cadastrado no painel.
 
-O checkout consulta o identificador do Pix anterior e oferece retomá-lo, sem abrir automaticamente um código antigo. Pagamentos encerrados e vencidos não são recuperados como pagáveis. O cliente pode voltar ao checkout ou iniciar outro pedido conscientemente; isso não cancela cobranças anteriores.
+O checkout sempre começa como um pedido novo e não recupera Pix ou pedidos anteriores do navegador. O acompanhamento é aberto somente pelo link com o identificador do pedido gerado.
 
 
 O acompanhamento em /pedido/ mostra aguardando pagamento, em preparo, saiu para entrega e entregue. O preparo começa após a confirmação real do Pix; as etapas de entrega são alteradas no Adminx, com validação de sequência e proteção contra atualizações simultâneas. O cliente recebe as atualizações automaticamente a cada 12 segundos. O acesso usa a sessão do navegador do pedido.
