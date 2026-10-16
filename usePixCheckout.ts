@@ -10,6 +10,7 @@ export function usePixCheckout(enabled:boolean,setCart:(update:(current:any[])=>
   if(!enabled)return;
   let id='';try{id=localStorage.getItem('hana-pix')||'';}catch{}
   savedId.current=id;
+  try{if(id)localStorage.setItem('hana-last-order',id);}catch{}
   if(!id){setChecking(false);return;}
   let current=true;const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),8000);
@@ -32,8 +33,8 @@ export function usePixCheckout(enabled:boolean,setCart:(update:(current:any[])=>
   if(state!=='pending')forgetPix(localStorage,pix.id);
   if(state==='paid'){
    setCart(current=>sameOrderItems(current,pix)?[]:current);
-   return;
   }
+  if(pix.fulfillment?.status==='delivered')return;
   if(state==='closed')return;
   // Continue checking a code that has just expired in case payment was made at expiry.
   let current=true;const controller=new AbortController();let running=false;
@@ -48,11 +49,12 @@ export function usePixCheckout(enabled:boolean,setCart:(update:(current:any[])=>
   refresh();
   const timer=setInterval(refresh,12000);
   return()=>{current=false;controller.abort();clearInterval(timer);};
- },[pix?.id,pix?.status,pix?.paid,pix?.expirationDate,setCart]);
+ },[pix?.id,pix?.status,pix?.paid,pix?.expirationDate,pix?.fulfillment?.status,setCart]);
 
  function acceptPayment(payment:any){
   setPix(payment);setPrevious(null);setMessage('');
   savedId.current=payment.id||'';
+  try{if(payment.id)localStorage.setItem('hana-last-order',payment.id);}catch{}
   try{if(payment.id&&pixState(payment)==='pending')localStorage.setItem('hana-pix',payment.id);}catch{}
  }
  function backToCheckout(){

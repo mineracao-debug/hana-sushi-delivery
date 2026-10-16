@@ -22,3 +22,6 @@ As integrações Umbrellapag, Sharkpay e UTMify são do projeto Shopping. O Pix 
 
 O checkout consulta o identificador do Pix anterior e oferece retomá-lo, sem abrir automaticamente um código antigo. Pagamentos encerrados e vencidos não são recuperados como pagáveis. O cliente pode voltar ao checkout ou iniciar outro pedido conscientemente; isso não cancela cobranças anteriores.
 
+
+O acompanhamento em /pedido/ mostra aguardando pagamento, em preparo, saiu para entrega e entregue. O preparo começa após a confirmação real do Pix; as etapas de entrega são alteradas no Adminx, com validação de sequência e proteção contra atualizações simultâneas. O cliente recebe as atualizações automaticamente a cada 12 segundos. O acesso usa a sessão do navegador do pedido.
+
